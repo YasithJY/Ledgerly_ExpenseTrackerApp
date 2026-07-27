@@ -1,31 +1,42 @@
-# Fix Build Error: Cannot query the value of property 'testedVariantArtifacts$kotlin_gradle_plugin_common'
+# Fix Build Errors and Code Warnings
 
-The error is caused by a mismatch or missing configuration between the Kotlin Gradle Plugin (KGP), Android Gradle Plugin (AGP), and Kotlin Symbol Processing (KSP). Specifically, the Kotlin Android plugin is not explicitly applied in the project, which KSP requires to correctly resolve variant artifacts.
+The project currently fails to build because `androidx.core:core-ktx:1.19.0` requires `compileSdk` 37, while the project is set to 36. Additionally, there are several minor code warnings and unused functions that need cleaning up.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> The project is using very new/experimental versions of AGP (9.3.1) and Gradle (9.5.0). I will align the Kotlin and KSP versions to `2.0.2` as initially indicated by the KSP version string, and ensure the Kotlin plugin is correctly applied.
+> I will update the `compileSdk` and `targetSdk` to 37. This is necessary for the current dependencies to work correctly.
 
 ## Proposed Changes
 
 ### Build Configuration
 
-#### [MODIFY] [libs.versions.toml](file:///D:/SLIIT/SLIIT%20Y4%20S2/MADD/Assignment_01_IT22136374/gradle/libs.versions.toml)
-- Add `kotlin = "2.0.2"` to the `[versions]` block.
-- Add `kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }` to the `[plugins]` block.
-
-#### [MODIFY] [build.gradle.kts (root)](file:///D:/SLIIT/SLIIT%20Y4%20S2/MADD/Assignment_01_IT22136374/build.gradle.kts)
-- Apply the `kotlin-android` plugin in the `plugins` block with `apply false`.
-
 #### [MODIFY] [app/build.gradle.kts](file:///D:/SLIIT/SLIIT%20Y4%20S2/MADD/Assignment_01_IT22136374/app/build.gradle.kts)
-- Apply the `kotlin-android` plugin in the `plugins` block using `alias(libs.plugins.kotlin.android)`.
+- Change `compileSdk` to 37.
+- Change `targetSdk` to 37.
+
+### Code Cleanup
+
+#### [MODIFY] [AddTransactionActivity.kt](file:///D:/SLIIT/SLIIT%20Y4%20S2/MADD/Assignment_01_IT22136374/app/src/main/java/com/example/expensetrackerapp/AddTransactionActivity.kt)
+- Fix formatting (missing commas).
+
+#### [MODIFY] [AppDatabase.kt](file:///D:/SLIIT/SLIIT%20Y4%20S2/MADD/Assignment_01_IT22136374/app/src/main/java/com/example/expensetrackerapp/AppDatabase.kt)
+- Fix formatting (missing commas).
+
+#### [MODIFY] [Transaction.kt](file:///D:/SLIIT/SLIIT%20Y4%20S2/MADD/Assignment_01_IT22136374/app/src/main/java/com/example/expensetrackerapp/Transaction.kt)
+- Fix formatting (missing commas).
+
+#### [MODIFY] [TransactionAdapter.kt](file:///D:/SLIIT/SLIIT%20Y4%20S2/MADD/Assignment_01_IT22136374/app/src/main/java/com/example/expensetrackerapp/TransactionAdapter.kt)
+- Use string resources or better formatting for currency display.
+- Use `toColorInt()` for color parsing.
+
+#### [MODIFY] [TransactionViewModel.kt](file:///D:/SLIIT/SLIIT%20Y4%20S2/MADD/Assignment_01_IT22136374/app/src/main/java/com/example/expensetrackerapp/TransactionViewModel.kt)
+- Remove or mark unused functions (`update`, `delete`) if they are indeed not used. (I'll keep them but might suppress warnings if they are intended for future use, or just leave them if they don't block build).
 
 ## Verification Plan
 
 ### Automated Tests
-- Run `./gradlew :app:assembleDebug` to verify the build completes successfully.
-- Run `./gradlew :app:kspDebugKotlin` specifically to ensure KSP tasks are working.
+- Run `./gradlew :app:assembleDebug` to ensure the build passes with SDK 37.
 
 ### Manual Verification
-- Check if the IDE still reports any sync errors after the changes.
+- Verify the app runs on an emulator/device if possible.
