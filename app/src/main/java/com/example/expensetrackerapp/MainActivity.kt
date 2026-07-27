@@ -1,9 +1,12 @@
 package com.example.expensetrackerapp
 
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -29,9 +32,18 @@ class MainActivity : AppCompatActivity() {
         transactionViewModel = ViewModelProvider(this)[TransactionViewModel::class.java]
 
         // 3. Observe the list of transactions
+        val tvEmptyState = findViewById<TextView>(R.id.tvEmptyState)
         transactionViewModel.allTransactions.observe(this) { transactions ->
-            // This updates the RecyclerView automatically whenever the database changes
-            transactions?.let { adapter.submitList(it) }
+            transactions?.let {
+                adapter.submitList(it)
+                if (it.isEmpty()) {
+                    tvEmptyState.visibility = View.VISIBLE
+                    recyclerView.visibility = View.GONE
+                } else {
+                    tvEmptyState.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
+                }
+            }
         }
 
         // 4. Setup Balance Views and formatting
@@ -59,6 +71,30 @@ class MainActivity : AppCompatActivity() {
             val intent = android.content.Intent(this, AddTransactionActivity::class.java)
             startActivity(intent)
         }
+
+        // 7. Setup Swipe-to-Delete
+        val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(
+            0,
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.bindingAdapterPosition
+                val transactionToDelete = adapter.currentList[position]
+                transactionViewModel.delete(transactionToDelete)
+                Toast.makeText(this@MainActivity, "Transaction deleted", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
     }
 
     // Helper function to calculate and update the main balance
