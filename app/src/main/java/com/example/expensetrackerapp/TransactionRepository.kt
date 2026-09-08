@@ -9,8 +9,20 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
     val totalExpenses: Flow<Double?> = transactionDao.getTotalExpenses()
     val totalIncome: Flow<Double?> = transactionDao.getTotalIncome()
 
+    fun getMonthlyExpenses(startOfMonth: Long, endOfMonth: Long): Flow<Double?> {
+        return transactionDao.getMonthlyExpenses(startOfMonth, endOfMonth)
+    }
+
+    fun getMonthlyIncome(startOfMonth: Long, endOfMonth: Long): Flow<Double?> {
+        return transactionDao.getMonthlyIncome(startOfMonth, endOfMonth)
+    }
+
     suspend fun insert(transaction: Transaction) {
         transactionDao.insert(transaction)
+    }
+
+    suspend fun insertAll(transactions: List<Transaction>) {
+        transactionDao.insertAll(transactions)
     }
 
     suspend fun update(transaction: Transaction) {
@@ -19,5 +31,23 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
 
     suspend fun delete(transaction: Transaction) {
         transactionDao.delete(transaction)
+    }
+
+    suspend fun deleteAll() {
+        transactionDao.deleteAll()
+    }
+
+    suspend fun getTransactionsByDateRange(startDate: Long, endDate: Long): List<Transaction> {
+        return transactionDao.getTransactionsByDateRange(startDate, endDate)
+    }
+
+    val allBnplTransactions: Flow<List<Transaction>> = transactionDao.getAllBnplTransactions()
+
+    suspend fun getDueBnplInstallments(): List<Transaction> {
+        return transactionDao.getDueBnplInstallments()
+    }
+
+    suspend fun activateDueInstallments(currentTime: Long) {
+        transactionDao.activateDueInstallments(currentTime)
     }
 }

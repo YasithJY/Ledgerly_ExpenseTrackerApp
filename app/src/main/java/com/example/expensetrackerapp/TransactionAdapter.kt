@@ -1,5 +1,6 @@
 package com.example.expensetrackerapp
 
+import android.content.Context
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -8,11 +9,17 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import androidx.core.content.ContextCompat
 
-// ListAdapter automatically handles smooth animations when data changes
-class TransactionAdapter : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(TransactionsComparator()) {
+class TransactionAdapter(
+    private val context: Context,
+    private val onItemClick: ((Transaction) -> Unit)? = null
+) : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(TransactionsComparator()) {
+
+    private val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -25,37 +32,71 @@ class TransactionAdapter : ListAdapter<Transaction, TransactionAdapter.Transacti
         holder.bind(currentItem)
     }
 
-    class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val tvCategory: TextView = itemView.findViewById(R.id.tvCategory)
-        private val tvNote: TextView = itemView.findViewById(R.id.tvNote)
-        private val tvAmount: TextView = itemView.findViewById(R.id.tvAmount)
+    inner class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        init {
+            itemView.setOnClickListener {
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onItemClick?.invoke(getItem(position))
+                }
+            }
+        }
+
+        private val tvCategoryInitial: TextView = itemView.findViewById(R.id.tvCategoryInitial)
+        private val tvNote: TextView            = itemView.findViewById(R.id.tvNote)
+        private val tvBnplBadge: TextView       = itemView.findViewById(R.id.tvBnplBadge)
+        private val tvCategoryDate: TextView    = itemView.findViewById(R.id.tvCategoryDate)
+        private val tvAmount: TextView          = itemView.findViewById(R.id.tvAmount)
 
         fun bind(transaction: Transaction) {
-            tvCategory.text = transaction.category
-            tvNote.text = transaction.note
+            // Category initial letter
+            tvCategoryInitial.text = if (transaction.category.isNotEmpty())
+                transaction.category.first().uppercase() else "T"
 
-            // Format the amount as currency automatically
-            val format = NumberFormat.getCurrencyInstance(Locale.US)
-            val formattedAmount = format.format(transaction.amount)
+            // Set initial letter color by category
+            tvCategoryInitial.setTextColor(getCategoryColor(transaction.category))
 
-            // Dynamically change text color based on income vs expense
-            if (transaction.isExpense) {
-                tvAmount.text = "-$formattedAmount"
-                tvAmount.setTextColor(Color.parseColor("#F44336")) // Red for expenses
+            // Note
+            tvNote.text = transaction.note.ifEmpty { transaction.category }
+
+            // BNPL badge
+            if (transaction.isBnpl && transaction.totalInstallments > 0) {
+                tvBnplBadge.visibility = View.VISIBLE
+                tvBnplBadge.text = "Installment ${transaction.installmentNum}/${transaction.totalInstallments}"
             } else {
-                tvAmount.text = "+$formattedAmount"
-                tvAmount.setTextColor(Color.parseColor("#4CAF50")) // Green for income
+                tvBnplBadge.visibility = View.GONE
             }
+
+            // Category · Date subtitle
+            val formattedDate = dateFormat.format(Date(transaction.date))
+            tvCategoryDate.text = "${transaction.category} · $formattedDate"
+
+            // Amount with currency
+            val formatted = CurrencyUtils.format(context, transaction.amount, transaction.isExpense)
+            tvAmount.text = formatted
+            tvAmount.setTextColor(
+                if (transaction.isExpense) ContextCompat.getColor(context, R.color.expense_red)
+                else ContextCompat.getColor(context, R.color.income_green)
+            )
+        }
+
+        private fun getCategoryColor(category: String): Int = when (category.lowercase()) {
+            "food"          -> ContextCompat.getColor(context, R.color.bnpl_amber) // Amber
+            "grocery"       -> ContextCompat.getColor(context, R.color.income_green) // Green
+            "shopping"      -> ContextCompat.getColor(context, R.color.primary_blue) // Blue
+            "salary"        -> ContextCompat.getColor(context, R.color.income_green) // Green
+            "utilities"     -> ContextCompat.getColor(context, R.color.insights_purple) // Purple
+            "transport"     -> ContextCompat.getColor(context, R.color.primary_blue) // Blue
+            "entertainment" -> ContextCompat.getColor(context, R.color.expense_red) // Red
+            else            -> ContextCompat.getColor(context, R.color.text_secondary) // Gray
         }
     }
 
     class TransactionsComparator : DiffUtil.ItemCallback<Transaction>() {
-        override fun areItemsTheSame(oldItem: Transaction, newItem: Transaction): Boolean {
-            return oldItem.id == newItem.id
-        }
+        override fun areItemsTheSame(oldItem: Transaction, newItem: Transaction) =
+            oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: Transaction, newItem: Transaction): Boolean {
-            return oldItem == newItem
-        }
+        override fun areContentsTheSame(oldItem: Transaction, newItem: Transaction) =
+            oldItem == newItem
     }
 }

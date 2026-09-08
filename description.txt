@@ -1,0 +1,113 @@
+================================================================================
+EXPENSE TRACKER APP - COMPLETE SPECIFICATION & DESCRIPTION
+================================================================================
+
+--------------------------------------------------------------------------------
+1. APP OVERVIEW & BRANDING
+--------------------------------------------------------------------------------
+- App Name: ExpenseTracker (Personal Ledger)
+- Branding Logo: A brown leather wallet with a green credit card sticking out 
+  and a green checkmark badge in the bottom-right corner.
+- Design Aesthetic: Clean White / Light background with a modern, spacious 
+  fintech visual hierarchy.
+- Color Tokens:
+  * Primary Action Blue : #2563EB
+  * Primary Blue Dark   : #1D4ED8
+  * Inflow / Income     : #16A34A (Green)
+  * Outflow / Expense   : #EF4444 (Red)
+  * BNPL Installments   : #F59E0B (Amber)
+  * Insights / Reports  : #7C3AED (Purple)
+  * Surface Background  : #FFFFFF / #F8FAFC
+  * Secondary Text      : #6B7280
+  * Primary Text        : #111827
+
+--------------------------------------------------------------------------------
+2. UI LAYOUT & SCREEN SPECIFICATIONS
+--------------------------------------------------------------------------------
+
+[Screen 1: Animated Splash Screen]
+- Full-screen view on app launch.
+- Displays the wallet logo with the green checkmark badge.
+- Displays the title "ExpenseTracker" and tagline "TRACK, SAVE, SPEND WISELY".
+- Includes a smooth progress bar simulating local database synchronization.
+
+[Screen 2: Dashboard (Home Screen)]
+- Top Header: Displays the wallet icon logo, "ExpenseTracker" title, and current date.
+- Balance Summary Card:
+  * Gradient background: #2563EB (Top Left) to #7C3AED (Bottom Right).
+  * 24dp rounded corners with 8dp elevation shadow.
+  * Displays "TOTAL BALANCE" (Income - Expenses).
+  * Displays "TOTAL INCOME" (with green indicator ?) and "TOTAL EXPENSES" (with red indicator ?).
+- Filter Tabs: Segmented pill selector (All, Income, Expense, BNPL splits).
+- Recent Transactions Section: Scrollable list of recent ledger entries.
+
+[Screen 3: Dedicated Transactions Ledger Screen]
+- Search Bar: Live search input filtering transactions by note or category name.
+- Filter Pills: Instant filtering between All, Inflow, Outflow, and BNPL items.
+- Item Card Layout:
+  * 16dp rounded CardView with border.
+  * Category Icon Box: 12dp rounded box displaying the first letter of the category.
+  * Details: Memo Note (Bold), Category Name, and Transaction Date.
+  * Amount: Right-aligned formatted text (+$... in Green or -$... in Red).
+  * BNPL Badge: Amber tag if the transaction is an installment.
+- Gestures: Horizontal Swipe-to-Delete with red delete action background.
+
+[Screen 4: Add Transaction & BNPL Form]
+- Header: Title and Receipt Camera Scanner icon.
+- Type Selector: Pill button toggling between EXPENSE (Red) and INCOME (Green).
+- Inputs: Amount (Decimal), Category (Food, Grocery, Shopping, Salary, etc.), Date Picker, Memo Note.
+- BNPL Payment Splitter Toggle:
+  * Checkbox/Switch: "Split payment into installments (BNPL)".
+  * Duration Selector: Range slider or number input for 2 to 12 months.
+  * Preview Card: Live calculation showing the monthly payment amount (Total / Months).
+
+[Screen 5: Receipt Scanner Overlay (Google ML Kit OCR)]
+- Camera Viewport: Simulated scanning box with laser animation.
+- OCR Engine: Google ML Kit Text Recognition to extract prices (e.g. "Rs. 450" or "$14.99") offline.
+- Confirmation Screen: Shows parsed total amount, detected store name, and date with a "Fill Amount" button.
+
+[Screen 6: Financial Insights & PDF Reports]
+- Time Range Toggles: Switch between Last 7 Days (Week) and Last 30 Days (Month).
+- Summary Metrics: Inflow, Outflow, and Net Savings boxes.
+- Expense Distribution Chart: Category breakdown with visual percentage progress bars.
+- Action: "Download PDF Statement" button (triggers Android print manager / PDF export).
+
+[Screen 7: Settings Screen]
+- User Profile Card: Name, Email, and Avatar icon.
+- Currency Preference Selector: Toggle between regional currencies (e.g., LKR vs. USD).
+- Application Toggles: OCR scanning mode, Daily Reminder notifications, Biometric Lock screen.
+- Database Management: "Reset Database" action with a safety confirmation prompt.
+
+[Navigation Elements]
+- Mobile Bottom Navigation Bar:
+  * Items: Home (Dashboard), Ledger (Transactions), Plus (+ FAB Button in Center), Insights (Reports), Settings.
+- Desktop / Tablet Sidebar: Persistent left navigation panel with feature summaries.
+
+--------------------------------------------------------------------------------
+3. CORE FEATURES & LOGIC SPECIFICATIONS
+--------------------------------------------------------------------------------
+1. Real-Time Balance Calculation:
+   - Balance = Sum(Income Amounts) - Sum(Expense Amounts)
+2. BNPL (Buy Now, Pay Later) Batch Generation:
+   - When a BNPL expense is submitted for N months:
+     * Split Amount = Total Amount / N
+     * Creates N separate transaction records in the database, each dated 1 month apart.
+     * Appends "(Installment X/N)" to the memo note.
+3. On-Device OCR Text Extraction:
+   - Regex pattern parsing for currency values: `(?:Rs|RS|rs|\$)\.?\s*(\d+(?:\.\d+)?)`.
+4. Offline Data Persistence:
+   - Local database caching using SQLite / Room / LocalStorage.
+
+--------------------------------------------------------------------------------
+4. ANDROID STUDIO IMPLEMENTATION GUIDE (KOTLIN)
+--------------------------------------------------------------------------------
+- Architecture: MVVM (Model-View-ViewModel) Pattern
+- Recommended Android Jetpack Libraries:
+  * Room Database (`androidx.room:room-runtime`, `androidx.room:room-compiler`, `androidx.room:room-ktx`)
+  * ViewModel & LiveData (`androidx.lifecycle:lifecycle-viewmodel-ktx`, `androidx.lifecycle:lifecycle-livedata-ktx`)
+  * RecyclerView & ListAdapter (`androidx.recyclerview:recyclerview`)
+  * Kotlin Coroutines for asynchronous DB operations.
+  * Google ML Kit Text Recognition (`com.google.mlkit:text-recognition`)
+  * Material Components (`com.google.android.material:material`)
+
+================================================================================

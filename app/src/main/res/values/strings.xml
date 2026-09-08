@@ -1,3 +1,67 @@
 <resources>
-    <string name="app_name">ExpenseTrackerApp</string>
+    <string name="app_name">Ledgerly</string>
+    <string name="app_subtitle">TRACK. MANAGE. SAVE.</string>
+    <string name="app_full_name">Your Personal Ledger</string>
+
+    <!-- Splash -->
+    <string name="splash_syncing">Syncing Room Database…</string>
+
+    <!-- Dashboard -->
+    <string name="total_balance">TOTAL BALANCE</string>
+    <string name="total_income">TOTAL INCOME</string>
+    <string name="total_expenses">TOTAL EXPENSES</string>
+    <string name="transaction_history">TRANSACTION HISTORY</string>
+    <string name="empty_state">No transactions found.\nTap the + button to add one.</string>
+    <string name="filter_all">All</string>
+    <string name="filter_income">Income</string>
+    <string name="filter_expense">Expense</string>
+    <string name="filter_bnpl">BNPL splits</string>
+
+    <!-- Add Transaction -->
+    <string name="add_transaction">Add Transaction</string>
+    <string name="save_transaction">Save Transaction</string>
+    <string name="error_amount_required">Please enter a valid amount greater than 0.</string>
+    <string name="error_category_required">Please select a category.</string>
+    <string name="bnpl_split_label">Split payment with BNPL</string>
+    <string name="monthly_payment_label">Monthly Payment:</string>
+
+    <!-- OCR Scanner -->
+    <string name="ocr_title">ML Kit OCR Scanner</string>
+    <string name="ocr_upload">Upload Receipt Image</string>
+    <string name="ocr_scanning">Running Google ML Kit OCR… Extracting character boxes offline</string>
+    <string name="ocr_success">Text Parsed Successfully</string>
+    <string name="ocr_scan_again">Scan Again</string>
+    <string name="ocr_fill_amount">Fill Amount</string>
+    <string name="ocr_cancel">Cancel</string>
+
+    <!-- Transactions Ledger -->
+    <string name="ledger_title">Transactions Ledger</string>
+    <string name="ledger_search_hint">Search notes or category…</string>
+
+    <!-- Statement / Insights -->
+    <string name="statement_title">Financial Statement</string>
+    <string name="statement_of_account">Statement of Account</string>
+    <string name="range_7_days">Last 7 Days</string>
+    <string name="range_30_days">Last 30 Days</string>
+    <string name="inflow">Inflow</string>
+    <string name="outflow">Outflow</string>
+    <string name="net_savings">Net Savings</string>
+    <string name="download_pdf">Download PDF Statement</string>
+    <string name="expense_distribution">Expense Distribution</string>
+    <string name="ledger_logs">Ledger Logs</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="currency_lkr">Sri Lankan Rupee (LKR)</string>
+    <string name="currency_usd">US Dollar (USD)</string>
+    <string name="ocr_engine">OCR Scanning Engine</string>
+    <string name="daily_reminders">Daily Reminder Notifications</string>
+    <string name="biometric_lock">Biometric Lock Screen</string>
+    <string name="reset_database">Reset Database</string>
+    <string name="reset_confirm_title">Reset All Data?</string>
+    <string name="reset_confirm_msg">This will permanently delete all transaction records. This cannot be undone.</string>
+    <string name="reset_confirm_bnpl_warning">WARNING: You have active Buy Now Pay Later (BNPL) installment schedules. Resetting the database will permanently delete them. This cannot be undone.</string>
+    <string name="reset_yes">Yes, Reset Data</string>
+    <string name="reset_cancel">Cancel</string>
+    <string name="theme_setting">App Theme</string>
 </resources>
