@@ -31,7 +31,7 @@ interface TransactionDao {
     fun getAllBnplTransactions(): Flow<List<Transaction>>
 
     // Calculates the total expenses (excluding future unpaid BNPL installments)
-    @Query("SELECT SUM(amount) FROM transaction_table WHERE isExpense = 1 AND isActivated = 1 AND (isBnpl = 0 OR installmentNum = 1 OR date <= (strftime('%s', 'now') * 1000))")
+    @Query("SELECT SUM(amount) FROM transaction_table WHERE isExpense = 1 AND isActivated = 1")
     fun getTotalExpenses(): Flow<Double?>
 
     // Gets due BNPL installments for reminder notifications
@@ -47,7 +47,7 @@ interface TransactionDao {
     suspend fun getTransactionsByDateRange(startDate: Long, endDate: Long): List<Transaction>
 
     // Calculates the total expenses for a specific month (excluding future unpaid BNPL installments)
-    @Query("SELECT SUM(amount) FROM transaction_table WHERE isExpense = 1 AND isActivated = 1 AND date BETWEEN :startOfMonth AND :endOfMonth AND (isBnpl = 0 OR installmentNum = 1 OR date <= (strftime('%s', 'now') * 1000))")
+    @Query("SELECT SUM(amount) FROM transaction_table WHERE isExpense = 1 AND isActivated = 1 AND date BETWEEN :startOfMonth AND :endOfMonth")
     fun getMonthlyExpenses(startOfMonth: Long, endOfMonth: Long): Flow<Double?>
 
     // Calculates the total income for a specific month

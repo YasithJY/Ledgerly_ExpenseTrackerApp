@@ -155,7 +155,7 @@ class AddTransactionActivity : AppCompatActivity(), OcrScannerDialog.OcrResultCa
                         installmentNum = i + 1,
                         totalInstallments = months,
                         paymentMethod = paymentMethod,
-                        isActivated = (i == 0)
+                        isActivated = (tempCalendar.timeInMillis <= System.currentTimeMillis())
                     )
                     transactionsList.add(transaction)
                 }

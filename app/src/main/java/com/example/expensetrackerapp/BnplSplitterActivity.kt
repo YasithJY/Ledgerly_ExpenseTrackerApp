@@ -57,7 +57,7 @@ class BnplSplitterActivity : AppCompatActivity() {
                     isBnpl = true,
                     installmentNum = i + 1,
                     totalInstallments = months,
-                    isActivated = (i == 0)
+                    isActivated = (calendar.timeInMillis <= System.currentTimeMillis())
                 )
                 transactionsList.add(transaction)
             }
