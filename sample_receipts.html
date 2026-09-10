@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Receipts for Scanner Testing</title>
+    <style>
+        @page {
+            margin: 10mm; /* Small margins for printing */
+            size: A4 portrait;
+        }
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Typical receipt font */
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columns */
+            grid-template-rows: repeat(2, auto); /* 2 rows */
+            gap: 15px;
+            /* Center vertically on page */
+            height: 95vh;
+            align-content: center;
+        }
+        .receipt {
+            background-color: white;
+            padding: 15px;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 0.85em; /* Smaller text to ensure they fit */
+            color: #333;
+        }
+        .center {
+            text-align: center;
+        }
+        .right {
+            text-align: right;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .divider {
+            border-bottom: 1px dashed #333;
+            margin: 8px 0;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 8px;
+        }
+        h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.1em;
+            text-transform: uppercase;
+        }
+        @media print {
+            body {
+                background-color: white;
+                height: auto;
+            }
+            .receipt {
+                box-shadow: none;
+                border: 1px solid #000;
+                page-break-inside: avoid; /* Prevent receipt from splitting across pages */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Receipt 1: Standard Supermarket ("Total" and Rs) -->
+    <div class="receipt">
+        <div class="center">
+            <h2>KEELLS SUPER</h2>
+            <p>123 Main Street<br>Colombo 03</p>
+        </div>
+        <div class="divider"></div>
+        <div class="item-row"><span>Milk</span><span>Rs 450.00</span></div>
+        <div class="item-row"><span>Bread</span><span>Rs 150.00</span></div>
+        <div class="item-row"><span>Eggs</span><span>Rs 300.00</span></div>
+        <div class="divider"></div>
+        <div class="total-row"><span>TOTAL</span><span>Rs 900.00</span></div>
+        <div class="divider"></div>
+        <div class="center"><p>Thank you for shopping!</p></div>
+    </div>
+
+    <!-- Receipt 2: Restaurant (Uses "Amount" and LKR) -->
+    <div class="receipt">
+        <div class="center">
+            <h2>CAFE COLOMBO</h2>
+            <p>Table: 12<br>Server: John</p>
+        </div>
+        <div class="divider"></div>
+        <div class="item-row"><span>Latte</span><span>850.00</span></div>
+        <div class="item-row"><span>Sandwich</span><span>1,200.00</span></div>
+        <div class="divider"></div>
+        <div class="item-row"><span>Subtotal</span><span>2,050.00</span></div>
+        <div class="item-row"><span>Service (10%)</span><span>205.00</span></div>
+        <div class="divider"></div>
+        <div class="total-row"><span>Amount Due</span><span>LKR 2,255.00</span></div>
+        <div class="center"><p>Please come again</p></div>
+    </div>
+
+    <!-- Receipt 3: Tech Store (No explicit total label, just a large number) -->
+    <div class="receipt">
+        <div class="center">
+            <h2>TECH GADGETS</h2>
+            <p>Order #99281</p>
+        </div>
+        <div class="divider"></div>
+        <div class="item-row"><span>Wireless Mouse</span><span>15,400.00</span></div>
+        <div class="item-row"><span>USB-C Cable</span><span>2,500.00</span></div>
+        <div class="divider"></div>
+        <div class="item-row"><span>ITEMS: 2</span><span></span></div>
+        <div class="right" style="font-size: 1.3em; font-weight: bold; margin-top: 15px;">
+            17,900.00
+        </div>
+        <div class="divider"></div>
+        <div class="center"><p>Returns within 14 days</p></div>
+    </div>
+
+    <!-- Receipt 4: Bookstore (Invoice Style, tests ignore "invoice" logic) -->
+    <div class="receipt">
+        <div class="center">
+            <h2>READERS HUB</h2>
+            <p>TAX INVOICE</p>
+        </div>
+        <div class="divider"></div>
+        <div class="item-row"><span>Fiction Novel</span><span>$ 14.99</span></div>
+        <div class="item-row"><span>Notebook</span><span>$ 5.50</span></div>
+        <div class="divider"></div>
+        <div class="total-row"><span>Total</span><span>$ 20.49</span></div>
+        <div class="center"><p>Keep this invoice for returns</p></div>
+    </div>
+
+    <!-- Receipt 5: Gas Station (Simple layout) -->
+    <div class="receipt">
+        <div class="center">
+            <h2>FUEL STATION</h2>
+            <p>Pump #4</p>
+        </div>
+        <div class="divider"></div>
+        <div class="item-row"><span>Petrol 95</span><span></span></div>
+        <div class="item-row"><span>Volume (L)</span><span>10.50</span></div>
+        <div class="item-row"><span>Rate/L</span><span>390.00</span></div>
+        <div class="divider"></div>
+        <div class="total-row"><span>TOTAL</span><span>4,095.00</span></div>
+        <div class="center"><p>Drive Safely!</p></div>
+    </div>
+
+    <!-- Receipt 6: International Coffee (Uses £ symbol) -->
+    <div class="receipt">
+        <div class="center">
+            <h2>LONDON BREW</h2>
+            <p>Oxford Street</p>
+        </div>
+        <div class="divider"></div>
+        <div class="item-row"><span>Espresso</span><span>£ 2.50</span></div>
+        <div class="item-row"><span>Muffin</span><span>£ 3.20</span></div>
+        <div class="divider"></div>
+        <div class="total-row"><span>Total Paid</span><span>£ 5.70</span></div>
+        <div class="center"><p>VAT #12345678</p></div>
+    </div>
+
+</body>
+</html>
