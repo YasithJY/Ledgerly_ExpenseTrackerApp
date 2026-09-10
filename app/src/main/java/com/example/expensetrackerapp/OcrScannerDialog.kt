@@ -229,14 +229,41 @@ class OcrScannerDialog : DialogFragment() {
     }
 
     private fun extractStoreFromText(text: String): String {
-        val lines = text.split("\n")
-        return if (lines.isNotEmpty()) lines[0].trim() else "Receipt Invoice"
+        val lines = text.split("\n").filter { it.isNotBlank() }
+        val validLines = lines.filter { line ->
+            !line.contains("receipt", ignoreCase = true) &&
+            !line.contains("invoice", ignoreCase = true) &&
+            line.length > 2
+        }
+        return if (validLines.isNotEmpty()) validLines[0].trim() else "Unknown Store"
     }
 
     private fun extractAmountFromText(text: String): Double? {
-        val regex = Regex("""(?:Rs|RS|rs|\$)\.?\s*(\d+(?:\.\d+)?)""")
+        // 1. Try to find a line with "Total" or "Amount" and grab the last number on that line
+        val lines = text.split("\n")
+        for (line in lines) {
+            if (line.contains("total", ignoreCase = true) || line.contains("amount", ignoreCase = true)) {
+                val amountRegex = Regex("""(\d+(?:,\d{3})*(?:\.\d+)?)""")
+                val match = amountRegex.findAll(line).lastOrNull()
+                if (match != null) {
+                    val amount = match.value.replace(",", "").toDoubleOrNull()
+                    if (amount != null && amount > 0) return amount
+                }
+            }
+        }
+
+        // 2. Fallback: Find all numbers with 2 decimal places and return the largest one
+        val decimalRegex = Regex("""\b(\d+(?:,\d{3})*\.\d{2})\b""")
+        val decimalMatches = decimalRegex.findAll(text).toList()
+        if (decimalMatches.isNotEmpty()) {
+            val maxAmount = decimalMatches.mapNotNull { it.groupValues[1].replace(",", "").toDoubleOrNull() }.maxOrNull()
+            if (maxAmount != null) return maxAmount
+        }
+
+        // 3. Fallback: Look for currency symbols (including LKR)
+        val regex = Regex("""(?:Rs|RS|rs|LKR|lkr|\$|£|€)\.?\s*(\d+(?:,\d{3})*(?:\.\d+)?)""")
         val match = regex.find(text)
-        return match?.groupValues?.get(1)?.toDoubleOrNull()
+        return match?.groupValues?.get(1)?.replace(",", "")?.toDoubleOrNull()
     }
 
     private fun startLaserAnimation() {
