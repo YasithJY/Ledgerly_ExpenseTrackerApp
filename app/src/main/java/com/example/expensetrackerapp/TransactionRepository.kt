@@ -2,7 +2,9 @@ package com.example.expensetrackerapp
 
 import kotlinx.coroutines.flow.Flow
 
-class TransactionRepository(private val transactionDao: TransactionDao) {
+import javax.inject.Inject
+
+class TransactionRepository @Inject constructor(private val transactionDao: TransactionDao) {
 
     // Room executes all queries returning Flow on a background thread automatically
     val allTransactions: Flow<List<Transaction>> = transactionDao.getAllTransactions()

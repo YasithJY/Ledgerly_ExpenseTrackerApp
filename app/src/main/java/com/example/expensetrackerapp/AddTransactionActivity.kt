@@ -26,9 +26,13 @@ import androidx.core.content.ContextCompat
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 
+import androidx.activity.viewModels
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class AddTransactionActivity : AppCompatActivity(), OcrScannerDialog.OcrResultCallback {
 
-    private lateinit var transactionViewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
     private lateinit var etAmount: TextInputEditText
     private var selectedCategory: String = ""
     private lateinit var categoryButtons: List<com.google.android.material.button.MaterialButton>
@@ -37,7 +41,7 @@ class AddTransactionActivity : AppCompatActivity(), OcrScannerDialog.OcrResultCa
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_transaction)
 
-        transactionViewModel = ViewModelProvider(this)[TransactionViewModel::class.java]
+
 
         findViewById<ImageButton>(R.id.btnBackAddTx).setOnClickListener { finish() }
 
@@ -103,7 +107,12 @@ class AddTransactionActivity : AppCompatActivity(), OcrScannerDialog.OcrResultCa
             OcrScannerDialog().show(supportFragmentManager, "OcrScanner")
         }
 
-        btnSave.setOnClickListener {
+        btnSave.setOnClickListener { view ->
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
+            } else {
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
+            }
             val amountText = etAmount.text.toString()
             val category = etCategory.text.toString()
             val note = etNote.text.toString()
@@ -112,7 +121,8 @@ class AddTransactionActivity : AppCompatActivity(), OcrScannerDialog.OcrResultCa
             val paymentMethodText = etPaymentMethod.text.toString()
             val paymentMethod = if (paymentMethodText.isNotEmpty()) paymentMethodText else null
 
-            val amount = amountText.toDoubleOrNull() ?: 0.0
+            val displayAmount = amountText.toDoubleOrNull() ?: 0.0
+            val amount = CurrencyUtils.convertToBase(this, displayAmount)
 
             if (amount <= 0.0) {
                 Toast.makeText(this, "Please enter a valid amount greater than 0", Toast.LENGTH_SHORT).show()
@@ -132,32 +142,26 @@ class AddTransactionActivity : AppCompatActivity(), OcrScannerDialog.OcrResultCa
                     return@setOnClickListener
                 }
 
-                val baseInstallment = Math.floor((amount / months) * 100) / 100
-                val remainder = amount - (baseInstallment * months)
-                val firstInstallment = baseInstallment + remainder
+                val installments = BnplCalculator.calculateInstallments(
+                    totalAmount = amount,
+                    months = months,
+                    baseNote = note,
+                    startDateMillis = selectedDateMillis
+                )
 
-                val transactionsList = ArrayList<Transaction>()
-                val tempCalendar = Calendar.getInstance()
-                tempCalendar.timeInMillis = selectedDateMillis
-
-                for (i in 0 until months) {
-                    if (i > 0) {
-                        tempCalendar.add(Calendar.MONTH, 1)
-                    }
-                    val installAmt = if (i == 0) firstInstallment else baseInstallment
-                    val transaction = Transaction(
-                        amount = installAmt,
+                val transactionsList = installments.map { data ->
+                    Transaction(
+                        amount = data.amount,
                         category = category,
-                        note = if (note.isEmpty()) "BNPL Installment ${i + 1}/$months" else "$note (Installment ${i + 1}/$months)",
-                        date = tempCalendar.timeInMillis,
+                        note = data.note,
+                        date = data.dateMillis,
                         isExpense = isExpense,
                         isBnpl = true,
-                        installmentNum = i + 1,
+                        installmentNum = data.installmentNum,
                         totalInstallments = months,
                         paymentMethod = paymentMethod,
-                        isActivated = (tempCalendar.timeInMillis <= System.currentTimeMillis())
+                        isActivated = data.isActivated
                     )
-                    transactionsList.add(transaction)
                 }
 
                 transactionViewModel.insertAll(transactionsList)
@@ -198,7 +202,8 @@ class AddTransactionActivity : AppCompatActivity(), OcrScannerDialog.OcrResultCa
         )
 
         for (btn in categoryButtons) {
-            btn.setOnClickListener {
+            btn.setOnClickListener { view ->
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
                 selectCategory(btn.text.toString())
             }
         }

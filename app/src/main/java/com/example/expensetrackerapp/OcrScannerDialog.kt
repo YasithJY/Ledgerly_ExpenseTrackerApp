@@ -239,6 +239,8 @@ class OcrScannerDialog : DialogFragment() {
     }
 
     private fun extractAmountFromText(text: String): Double? {
+        var detectedAmount: Double? = null
+
         // 1. Try to find a line with "Total" or "Amount" and grab the last number on that line
         val lines = text.split("\n")
         for (line in lines) {
@@ -247,23 +249,45 @@ class OcrScannerDialog : DialogFragment() {
                 val match = amountRegex.findAll(line).lastOrNull()
                 if (match != null) {
                     val amount = match.value.replace(",", "").toDoubleOrNull()
-                    if (amount != null && amount > 0) return amount
+                    if (amount != null && amount > 0) {
+                        detectedAmount = amount
+                        break
+                    }
                 }
             }
         }
 
         // 2. Fallback: Find all numbers with 2 decimal places and return the largest one
-        val decimalRegex = Regex("""\b(\d+(?:,\d{3})*\.\d{2})\b""")
-        val decimalMatches = decimalRegex.findAll(text).toList()
-        if (decimalMatches.isNotEmpty()) {
-            val maxAmount = decimalMatches.mapNotNull { it.groupValues[1].replace(",", "").toDoubleOrNull() }.maxOrNull()
-            if (maxAmount != null) return maxAmount
+        if (detectedAmount == null) {
+            val decimalRegex = Regex("""\b(\d+(?:,\d{3})*\.\d{2})\b""")
+            val decimalMatches = decimalRegex.findAll(text).toList()
+            if (decimalMatches.isNotEmpty()) {
+                detectedAmount = decimalMatches.mapNotNull { it.groupValues[1].replace(",", "").toDoubleOrNull() }.maxOrNull()
+            }
         }
 
         // 3. Fallback: Look for currency symbols (including LKR)
-        val regex = Regex("""(?:Rs|RS|rs|LKR|lkr|\$|£|€)\.?\s*(\d+(?:,\d{3})*(?:\.\d+)?)""")
-        val match = regex.find(text)
-        return match?.groupValues?.get(1)?.replace(",", "")?.toDoubleOrNull()
+        if (detectedAmount == null) {
+            val regex = Regex("""(?:Rs|RS|rs|LKR|lkr|\$|£|€)\.?\s*(\d+(?:,\d{3})*(?:\.\d+)?)""")
+            val match = regex.find(text)
+            detectedAmount = match?.groupValues?.get(1)?.replace(",", "")?.toDoubleOrNull()
+        }
+
+        // Convert the detected amount to the app's currently selected currency
+        if (detectedAmount != null) {
+            val isReceiptUsd = text.contains("$")
+            val isAppUsd = CurrencyUtils.getSelectedCurrency(requireContext()) == CurrencyUtils.CURRENCY_USD
+
+            if (isReceiptUsd && !isAppUsd) {
+                // Receipt is $, App is LKR
+                detectedAmount *= CurrencyUtils.EXCHANGE_RATE_USD_TO_LKR
+            } else if (!isReceiptUsd && isAppUsd) {
+                // Receipt is LKR, App is $
+                detectedAmount /= CurrencyUtils.EXCHANGE_RATE_USD_TO_LKR
+            }
+        }
+
+        return detectedAmount
     }
 
     private fun startLaserAnimation() {

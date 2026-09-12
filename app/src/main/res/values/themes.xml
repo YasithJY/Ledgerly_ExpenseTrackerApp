@@ -13,6 +13,10 @@
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
 
+        <!-- Typography -->
+        <item name="android:fontFamily">@font/outfit</item>
+        <item name="fontFamily">@font/outfit</item>
+
         <!-- Status bar and navigation bar colors -->
         <item name="android:statusBarColor">@color/bg_main</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>

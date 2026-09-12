@@ -1,17 +1,19 @@
 package com.example.expensetrackerapp
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class TransactionViewModel(application: Application) : AndroidViewModel(application) {
-
+@HiltViewModel
+class TransactionViewModel @Inject constructor(
     private val repository: TransactionRepository
+) : ViewModel() {
 
     // LiveData gives us real-time updates to display in our UI
     val allTransactions: LiveData<List<Transaction>>
@@ -23,8 +25,6 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     val dateRangeTransactions: LiveData<List<Transaction>> = _dateRangeTransactions
 
     init {
-        val transactionDao = AppDatabase.getDatabase(application).transactionDao()
-        repository = TransactionRepository(transactionDao)
 
         // Convert the Flow from Room into LiveData
         allTransactions = repository.allTransactions.asLiveData()

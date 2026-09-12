@@ -20,9 +20,13 @@ import java.util.Date
 import java.util.Locale
 import androidx.core.content.ContextCompat
 
+import androidx.activity.viewModels
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var transactionViewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
     private lateinit var adapter: TransactionAdapter
     private var allTransactionsList: List<Transaction> = emptyList()
     private var allBnplList: List<Transaction> = emptyList()
@@ -38,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        transactionViewModel = ViewModelProvider(this)[TransactionViewModel::class.java]
+
 
         val tvEmptyState = findViewById<TextView>(R.id.tvEmptyState)
         val tvCount = findViewById<TextView>(R.id.tvTransactionCount)
@@ -104,14 +108,18 @@ class MainActivity : AppCompatActivity() {
 
         setupSwipeToDelete(recyclerView)
 
-        transactionViewModel.checkDueBnplInstallments { dueList ->
-            if (dueList.isNotEmpty()) {
-                val prefs = CurrencyUtils.getPrefs(this)
-                val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                val lastCheckedDay = prefs.getString("last_checked_reminder_day", "")
-                if (lastCheckedDay != todayStr) {
-                    showBnplReminderDialog(dueList)
-                    prefs.edit().putString("last_checked_reminder_day", todayStr).apply()
+        val prefs = CurrencyUtils.getPrefs(this)
+        val remindersEnabled = prefs.getBoolean("reminders_enabled", false)
+        
+        if (remindersEnabled) {
+            transactionViewModel.checkDueBnplInstallments { dueList ->
+                if (dueList.isNotEmpty()) {
+                    val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                    val lastCheckedDay = prefs.getString("last_checked_reminder_day", "")
+                    if (lastCheckedDay != todayStr) {
+                        showBnplReminderDialog(dueList)
+                        prefs.edit().putString("last_checked_reminder_day", todayStr).apply()
+                    }
                 }
             }
         }
@@ -264,6 +272,7 @@ class MainActivity : AppCompatActivity() {
                 if (position != RecyclerView.NO_ID.toInt()) {
                     val tx = adapter.currentList[position]
                     transactionViewModel.delete(tx)
+                    viewHolder.itemView.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
                 }
             }
 

@@ -25,9 +25,13 @@ import androidx.core.content.ContextCompat
 import android.widget.AdapterView
 import java.util.Calendar
 
+import androidx.activity.viewModels
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class TransactionsActivity : AppCompatActivity() {
 
-    private lateinit var transactionViewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
     private lateinit var adapter: TransactionAdapter
     private var allTransactions: List<Transaction> = emptyList()
     private var allBnplTransactions: List<Transaction> = emptyList()
@@ -46,7 +50,7 @@ class TransactionsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_transactions)
 
-        transactionViewModel = ViewModelProvider(this)[TransactionViewModel::class.java]
+
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewLedger)
         adapter = TransactionAdapter(this) { transaction ->
@@ -192,6 +196,11 @@ class TransactionsActivity : AppCompatActivity() {
             override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder,
                                 target: RecyclerView.ViewHolder) = false
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                    viewHolder.itemView.performHapticFeedback(android.view.HapticFeedbackConstants.REJECT)
+                } else {
+                    viewHolder.itemView.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+                }
                 val tx = adapter.currentList[viewHolder.bindingAdapterPosition]
                 transactionViewModel.delete(tx)
             }

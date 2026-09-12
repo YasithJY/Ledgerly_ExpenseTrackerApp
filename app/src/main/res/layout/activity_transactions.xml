@@ -186,6 +186,7 @@
     <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewLedger"
+        android:scrollbars="none"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
@@ -208,8 +209,9 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:id="@+id/ivEmptyState"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:src="@android:drawable/ic_menu_search"
             app:tint="?android:textColorSecondary"
             android:layout_marginBottom="8dp" />

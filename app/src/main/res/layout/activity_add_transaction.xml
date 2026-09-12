@@ -43,6 +43,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:scrollbars="none"
         android:layout_weight="1"
         android:fillViewport="true">
 
@@ -285,7 +286,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginBottom="16dp"
-                android:text="Scan Receipt (Google ML Kit)"
+                android:text="Scan Receipt"
                 android:drawableStart="@android:drawable/ic_menu_camera"
                 android:drawablePadding="8dp"
                 app:strokeColor="@color/primary_blue"

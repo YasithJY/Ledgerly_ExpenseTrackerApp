@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.hilt.android.plugin)
 }
 
 android {
@@ -68,8 +69,7 @@ dependencies {
     // CoordinatorLayout (for Dashboard)
     implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
 
-    // Biometric
-    implementation("androidx.biometric:biometric:1.1.0")
+
 
     // CameraX
     val cameraxVersion = "1.3.1"
@@ -77,4 +77,16 @@ dependencies {
     implementation("androidx.camera:camera-camera2:$cameraxVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
+
+    // Hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.hilt.work)
+    kapt(libs.hilt.compiler)
+    
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+    
+    // Lottie
+    implementation(libs.lottie)
 }

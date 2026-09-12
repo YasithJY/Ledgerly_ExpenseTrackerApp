@@ -115,11 +115,13 @@
                 android:layout_gravity="top" />
         </FrameLayout>
 
-        <ProgressBar
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:indeterminate="true"
-            android:progressTint="@color/primary_blue"
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lottieScanning"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            app:lottie_url="https://lottie.host/17ebad8a-3564-4e9e-8c34-eb17a9cba29a/mS8S6B85V9.json"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
             android:layout_marginBottom="12dp" />
 
         <TextView
@@ -142,6 +144,14 @@
         android:visibility="gone">
 
         <!-- Success badge -->
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lottieSuccess"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            app:lottie_url="https://lottie.host/9e0bb6df-3b32-4d76-963d-4c32b50935cc/NpxkZ2B2oJ.json"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="false"
+            android:layout_marginBottom="8dp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

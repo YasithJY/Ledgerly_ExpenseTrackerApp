@@ -21,9 +21,13 @@ import java.util.Date
 import java.util.Locale
 import androidx.core.content.ContextCompat
 
+import androidx.activity.viewModels
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class InsightsActivity : AppCompatActivity() {
 
-    private lateinit var transactionViewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
     private val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
     private var rangeDays = 7
 
@@ -31,7 +35,7 @@ class InsightsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_insights)
 
-        transactionViewModel = ViewModelProvider(this)[TransactionViewModel::class.java]
+
 
         val btnBack = findViewById<ImageButton>(R.id.btnBackInsights)
         btnBack.setOnClickListener { finish() }
@@ -53,6 +57,9 @@ class InsightsActivity : AppCompatActivity() {
 
         // PDF button
         findViewById<Button>(R.id.btnDownloadPdf).setOnClickListener { generatePdf() }
+
+        // CSV button
+        findViewById<Button>(R.id.btnDownloadCsv).setOnClickListener { generateCsv() }
 
         // Initial load
         loadData()
@@ -84,9 +91,9 @@ class InsightsActivity : AppCompatActivity() {
         val tvOutflow = findViewById<TextView>(R.id.tvStatOutflow)
         val tvNet     = findViewById<TextView>(R.id.tvStatNet)
 
-        tvInflow.text  = "$symbol${String.format("%,.2f", inflow)}"
-        tvOutflow.text = "$symbol${String.format("%,.2f", outflow)}"
-        tvNet.text     = "$symbol${String.format("%,.2f", net)}"
+        tvInflow.text  = CurrencyUtils.format(this, inflow, null)
+        tvOutflow.text = CurrencyUtils.format(this, outflow, null)
+        tvNet.text     = CurrencyUtils.format(this, net, null)
         tvNet.setTextColor(if (net >= 0) ContextCompat.getColor(this, R.color.income_green) else ContextCompat.getColor(this, R.color.expense_red))
 
         // Category breakdown
@@ -125,7 +132,8 @@ class InsightsActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
             val tvAmt = TextView(this).apply {
-                text = "$symbol${String.format("%,.2f", amount)} ($pct%)"
+                val formattedAmount = CurrencyUtils.format(this@InsightsActivity, amount, null)
+                text = "$formattedAmount ($pct%)"
                 textSize = 12f; setTextColor(ContextCompat.getColor(this@InsightsActivity, R.color.text_secondary))
             }
             labelRow.addView(tvCat); labelRow.addView(tvAmt)
@@ -170,8 +178,7 @@ class InsightsActivity : AppCompatActivity() {
                 textSize = 12f; setTextColor(ContextCompat.getColor(this@InsightsActivity, R.color.text_primary))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
-            val amtStr = if (tx.isExpense) "-$symbol${String.format("%,.2f", tx.amount)}"
-                         else              "+$symbol${String.format("%,.2f", tx.amount)}"
+            val amtStr = CurrencyUtils.format(this@InsightsActivity, tx.amount, tx.isExpense)
             val tvAmt = TextView(this).apply {
                 text = amtStr; textSize = 13f; setTypeface(null, android.graphics.Typeface.BOLD)
                 setTextColor(if (tx.isExpense) ContextCompat.getColor(this@InsightsActivity, R.color.expense_red) else ContextCompat.getColor(this@InsightsActivity, R.color.income_green))
@@ -198,10 +205,10 @@ class InsightsActivity : AppCompatActivity() {
         val net     = inflow - outflow
 
         val rows = transactions.joinToString("") { tx ->
-            val sign  = if (tx.isExpense) "-" else "+"
             val color = if (tx.isExpense) "#EF4444" else "#16A34A"
+            val formatted = CurrencyUtils.format(this, tx.amount, tx.isExpense)
             "<tr><td>${tx.note}</td><td>${tx.category}</td><td>${dateFormat.format(Date(tx.date))}</td>" +
-            "<td style='color:$color;font-weight:bold;'>$sign$symbol${String.format("%,.2f", tx.amount)}</td></tr>"
+            "<td style='color:$color;font-weight:bold;'>$formatted</td></tr>"
         }
 
         val html = """
@@ -215,9 +222,9 @@ class InsightsActivity : AppCompatActivity() {
             <h2>Statement of Account</h2>
             <p>${dateFormat.format(Date(startMillis))} – ${dateFormat.format(Date(endMillis))}</p>
             <table><tr>
-              <td><b>Inflow</b><br><span style='color:#16A34A'>$symbol${String.format("%,.2f", inflow)}</span></td>
-              <td><b>Outflow</b><br><span style='color:#EF4444'>$symbol${String.format("%,.2f", outflow)}</span></td>
-              <td><b>Net</b><br><span style='color:${if(net>=0)"#16A34A" else "#EF4444"}'>$symbol${String.format("%,.2f", net)}</span></td>
+              <td><b>Inflow</b><br><span style='color:#16A34A'>${CurrencyUtils.format(this, inflow, null)}</span></td>
+              <td><b>Outflow</b><br><span style='color:#EF4444'>${CurrencyUtils.format(this, outflow, null)}</span></td>
+              <td><b>Net</b><br><span style='color:${if(net>=0)"#16A34A" else "#EF4444"}'>${CurrencyUtils.format(this, net, null)}</span></td>
             </tr></table><br>
             <table><tr><th>Note</th><th>Category</th><th>Date</th><th>Amount</th></tr>$rows</table>
             </body></html>
@@ -236,6 +243,37 @@ class InsightsActivity : AppCompatActivity() {
             }
         }
         webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+    }
+
+    private val createCsvLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+        uri?.let { writeCsvToUri(it) }
+    }
+
+    private fun generateCsv() {
+        createCsvLauncher.launch("ExpenseStatement.csv")
+    }
+
+    private fun writeCsvToUri(uri: android.net.Uri) {
+        try {
+            contentResolver.openOutputStream(uri)?.use { outputStream ->
+                val writer = java.io.OutputStreamWriter(outputStream)
+                writer.write("Date,Category,Note,Type,Amount\n")
+                
+                val transactions = transactionViewModel.dateRangeTransactions.value ?: emptyList()
+                for (tx in transactions) {
+                    val dateStr = dateFormat.format(Date(tx.date))
+                    val typeStr = if (tx.isExpense) "Expense" else "Income"
+                    val noteStr = "\"${tx.note.replace("\"", "\"\"")}\""
+                    val catStr = "\"${tx.category.replace("\"", "\"\"")}\""
+                    writer.write("$dateStr,$catStr,$noteStr,$typeStr,${tx.amount}\n")
+                }
+                writer.flush()
+            }
+            android.widget.Toast.makeText(this, "CSV saved successfully!", android.widget.Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            android.widget.Toast.makeText(this, "Error saving CSV", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun dpToPx(dp: Int): Int =

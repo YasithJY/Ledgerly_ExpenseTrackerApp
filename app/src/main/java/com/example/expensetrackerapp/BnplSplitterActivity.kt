@@ -9,15 +9,19 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputEditText
 import java.util.Calendar
 
+import androidx.activity.viewModels
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class BnplSplitterActivity : AppCompatActivity() {
 
-    private lateinit var transactionViewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bnpl_splitter)
 
-        transactionViewModel = ViewModelProvider(this)[TransactionViewModel::class.java]
+
 
         val btnBack = findViewById<ImageButton>(R.id.btnBackBnpl)
         val etTitle = findViewById<TextInputEditText>(R.id.etBnplTitle)
@@ -27,12 +31,18 @@ class BnplSplitterActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
 
-        btnCalculate.setOnClickListener {
+        btnCalculate.setOnClickListener { view ->
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
+            } else {
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
+            }
             val title = etTitle.text.toString().ifEmpty { "BNPL Purchase" }
             val amountText = etAmount.text.toString()
             val monthsText = etMonths.text.toString()
 
-            val amount = amountText.toDoubleOrNull()
+            val displayAmount = amountText.toDoubleOrNull()
+            val amount = if (displayAmount != null) CurrencyUtils.convertToBase(this, displayAmount) else null
             val months = monthsText.toIntOrNull()
 
             if (amount == null || amount <= 0 || months == null || months <= 0) {

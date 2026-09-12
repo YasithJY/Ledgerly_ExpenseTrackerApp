@@ -47,6 +47,7 @@
     <string name="outflow">Outflow</string>
     <string name="net_savings">Net Savings</string>
     <string name="download_pdf">Download PDF Statement</string>
+    <string name="download_csv">Download CSV Statement</string>
     <string name="expense_distribution">Expense Distribution</string>
     <string name="ledger_logs">Ledger Logs</string>
 

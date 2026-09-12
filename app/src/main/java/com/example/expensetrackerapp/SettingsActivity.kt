@@ -15,15 +15,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+import androidx.activity.viewModels
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
 
-    private lateinit var transactionViewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
-
-        transactionViewModel = ViewModelProvider(this)[TransactionViewModel::class.java]
 
         // ─── Back button ──────────────────────────────────────────────────
         findViewById<ImageButton>(R.id.btnBackSettings).setOnClickListener { finish() }
@@ -60,15 +62,42 @@ class SettingsActivity : AppCompatActivity() {
 
         val switchReminders = findViewById<SwitchCompat>(R.id.switchReminders)
         switchReminders.isChecked = prefs.getBoolean("reminders_enabled", false)
-        switchReminders.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("reminders_enabled", isChecked).apply()
+
+        val requestPermissionLauncher = registerForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                scheduleReminderWork()
+            } else {
+                Toast.makeText(this, "Permission denied, reminders will not work in the background", Toast.LENGTH_LONG).show()
+                switchReminders.isChecked = false
+                prefs.edit().putBoolean("reminders_enabled", false).apply()
+            }
         }
 
-        val switchBiometric = findViewById<SwitchCompat>(R.id.switchBiometric)
-        switchBiometric.isChecked = prefs.getBoolean("biometric_enabled", false)
-        switchBiometric.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("biometric_enabled", isChecked).apply()
+        switchReminders.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("reminders_enabled", isChecked).apply()
+            if (isChecked) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    if (androidx.core.content.ContextCompat.checkSelfPermission(
+                            this,
+                            android.Manifest.permission.POST_NOTIFICATIONS
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    ) {
+                        scheduleReminderWork()
+                    } else {
+                        requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                } else {
+                    scheduleReminderWork()
+                }
+            } else {
+                androidx.work.WorkManager.getInstance(this).cancelUniqueWork("bnpl_reminder_work")
+            }
         }
+
+
+
 
         // ─── Theme selection ───────────────────────────────────────────────
         val spinnerTheme = findViewById<android.widget.Spinner>(R.id.spinnerTheme)
@@ -99,6 +128,29 @@ class SettingsActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
+        // ─── How to Use ───────────────────────────────────────────────────
+        findViewById<Button>(R.id.btnHowToUse).setOnClickListener {
+            val instructions = """
+                Welcome to ExpenseTracker!
+
+                • Adding Transactions: Tap '+' on the dashboard to log your Income or Expenses. You can categorize them and select payment methods.
+                
+                • OCR Scanner: Don't want to type? Tap the scanner icon when adding an expense to snap a picture of your receipt. It automatically detects the total amount.
+                
+                • Dynamic Currency: Switch between LKR and USD in Settings. The app seamlessly converts your dashboard and dynamically calculates scanned receipts based on your current setting (1 USD = 328.42 LKR).
+                
+                • BNPL Splitter: Found a Buy-Now-Pay-Later deal? The BNPL Splitter divides the total cost into equal monthly installments and reminds you when they're due!
+                
+                • Insights & Statements: Head to the Insights tab to see your category breakdown, track your net savings, and download a PDF Statement of Account.
+            """.trimIndent()
+
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("How to Use ExpenseTracker")
+                .setMessage(instructions)
+                .setPositiveButton("Got it!", null)
+                .show()
+        }
+
         // ─── Reset DB ─────────────────────────────────────────────────────
         val cardResetConfirm = findViewById<View>(R.id.cardResetConfirm)
         val tvResetConfirmMsg = findViewById<TextView>(R.id.tvResetConfirmMsg)
@@ -124,5 +176,18 @@ class SettingsActivity : AppCompatActivity() {
             cardResetConfirm.visibility = View.GONE
             Toast.makeText(this, "Database cleared successfully", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun scheduleReminderWork() {
+        val workRequest = androidx.work.PeriodicWorkRequestBuilder<com.example.expensetrackerapp.worker.BnplReminderWorker>(
+            24, java.util.concurrent.TimeUnit.HOURS
+        ).build()
+        
+        androidx.work.WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "bnpl_reminder_work",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
+        Toast.makeText(this, "Background Reminders enabled!", Toast.LENGTH_SHORT).show()
     }
 }
