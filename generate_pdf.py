@@ -10,8 +10,8 @@ def create_receipts_pdf(filename):
     receipts = [
         [
             "KEELLS SUPER", "123 Main Street", "Colombo 03", "-----------------------",
-            "Milk        Rs 450.00", "Bread       Rs 150.00", "Eggs        Rs 300.00",
-            "-----------------------", "TOTAL       Rs 900.00", "-----------------------",
+            "Milk        LKR 450.00", "Bread       LKR 150.00", "Eggs        LKR 300.00",
+            "-----------------------", "TOTAL       LKR 900.00", "-----------------------",
             "Thank you for shopping!"
         ],
         [
@@ -22,8 +22,8 @@ def create_receipts_pdf(filename):
         ],
         [
             "TECH GADGETS", "Order #99281", "-----------------------",
-            "Wireless Mouse  15,400.00", "USB-C Cable      2,500.00", "-----------------------",
-            "ITEMS: 2", "", "             17,900.00", "-----------------------",
+            "Wireless Mouse  $ 54.00", "USB-C Cable      $ 15.00", "-----------------------",
+            "ITEMS: 2", "", "             TOTAL $ 69.00", "-----------------------",
             "Returns within 14 days"
         ],
         [
@@ -34,12 +34,12 @@ def create_receipts_pdf(filename):
         [
             "FUEL STATION", "Pump #4", "-----------------------",
             "Petrol 95", "Volume (L)        10.50", "Rate/L           390.00",
-            "-----------------------", "TOTAL          4,095.00", "Drive Safely!"
+            "-----------------------", "TOTAL        Rs 4,095.00", "Drive Safely!"
         ],
         [
-            "LONDON BREW", "Oxford Street", "-----------------------",
-            "Espresso         £ 2.50", "Muffin           £ 3.20", "-----------------------",
-            "Total Paid       £ 5.70", "VAT #12345678"
+            "AMERICAN BREW", "5th Avenue", "-----------------------",
+            "Espresso         $ 2.50", "Muffin           $ 3.20", "-----------------------",
+            "Total Paid       $ 5.70", "TAX #12345678"
         ]
     ]
 
