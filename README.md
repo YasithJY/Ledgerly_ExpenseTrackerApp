@@ -51,9 +51,17 @@ This project is built using the **MVVM (Model-View-ViewModel)** architectural pa
   - `LiveData` to observe real-time database changes.
   - `ViewModel` to store and manage UI-related data in a lifecycle-conscious way.
   - `Repository` to abstract access to multiple data sources.
-- **UI Components:**
+- **UI Components & Layouts:**
   - `RecyclerView` with `ListAdapter` and `DiffUtil` for smooth, optimized list rendering.
-  - Material Design components.
+  - Material Design 3 components (`MaterialCardView`, `FloatingActionButton`, `BottomNavigationView`).
+  - `ConstraintLayout` for creating complex, flat view hierarchies for optimal performance.
+  - `LinearLayout` and `FrameLayout` for simpler, structured UI grouping.
+- **Android Studio Tools & Components:**
+  - **View Binding:** Replaces `findViewById` for null-safe and type-safe view interaction.
+  - **App Inspection (Database Inspector):** Used for querying and monitoring the Room database in real-time.
+  - **Layout Inspector:** Utilized for debugging UI components and verifying Material 3 theming.
+  - **Logcat:** For tracking application logs, coroutine execution, and debugging Hilt injection.
+  - **Gradle Build System:** For managing dependencies and customizing the build process.
 
 ---
 
