@@ -68,9 +68,16 @@ class OcrScannerDialog : DialogFragment() {
         ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
+            val ctx = context ?: return@let
             showState(STATE_SCANNING)
             startLaserAnimation()
-            runMlKitOcr(InputImage.fromFilePath(requireContext(), it))
+            try {
+                runMlKitOcr(InputImage.fromFilePath(ctx, it))
+            } catch (e: Exception) {
+                laserAnimator?.cancel()
+                showState(STATE_IDLE)
+                Toast.makeText(ctx, "Failed to load image: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -141,6 +148,7 @@ class OcrScannerDialog : DialogFragment() {
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener({
+            val ctx = context ?: return@addListener
             try {
                 val cameraProvider = cameraProviderFuture.get()
                 val preview = Preview.Builder().build().also {
@@ -181,19 +189,21 @@ class OcrScannerDialog : DialogFragment() {
             ContextCompat.getMainExecutor(requireContext()),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
+                    val ctx = context ?: return
                     laserAnimator?.cancel()
                     showState(STATE_IDLE)
-                    Toast.makeText(context, "Photo capture failed: ${exc.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(ctx, "Photo capture failed: ${exc.message}", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    val ctx = context ?: return
                     try {
-                        val inputImage = InputImage.fromFilePath(requireContext(), android.net.Uri.fromFile(photoFile))
+                        val inputImage = InputImage.fromFilePath(ctx, android.net.Uri.fromFile(photoFile))
                         runMlKitOcr(inputImage)
                     } catch (e: Exception) {
                         laserAnimator?.cancel()
                         showState(STATE_IDLE)
-                        Toast.makeText(context, "Image parsing failed", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(ctx, "Image parsing failed", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -204,16 +214,17 @@ class OcrScannerDialog : DialogFragment() {
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
+                val ctx = context ?: return@addOnSuccessListener
                 laserAnimator?.cancel()
                 val text = visionText.text
-                val amount = extractAmountFromText(text) ?: 0.0
+                val amount = extractAmountFromText(text, ctx) ?: 0.0
                 val store = extractStoreFromText(text)
 
                 detectedAmount = amount
                 detectedStore = store
                 detectedDate = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
 
-                val symbol = CurrencyUtils.getCurrencySymbol(requireContext())
+                val symbol = CurrencyUtils.getCurrencySymbol(ctx)
                 tvDetectedAmount.text = "$symbol${String.format("%,.2f", amount)}"
                 tvDetectedStore.text = store
                 tvDetectedDate.text = detectedDate
@@ -222,9 +233,10 @@ class OcrScannerDialog : DialogFragment() {
                 showState(STATE_COMPLETE)
             }
             .addOnFailureListener { e ->
+                val ctx = context ?: return@addOnFailureListener
                 laserAnimator?.cancel()
                 showState(STATE_IDLE)
-                Toast.makeText(context, "OCR analysis failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(ctx, "OCR analysis failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -238,7 +250,7 @@ class OcrScannerDialog : DialogFragment() {
         return if (validLines.isNotEmpty()) validLines[0].trim() else "Unknown Store"
     }
 
-    private fun extractAmountFromText(text: String): Double? {
+    private fun extractAmountFromText(text: String, context: android.content.Context): Double? {
         var detectedAmount: Double? = null
 
         // 1. Try to find a line with "Total" or "Amount" and grab the last number on that line
@@ -276,14 +288,14 @@ class OcrScannerDialog : DialogFragment() {
         // Convert the detected amount to the app's currently selected currency
         if (detectedAmount != null) {
             val isReceiptUsd = text.contains("$")
-            val isAppUsd = CurrencyUtils.getSelectedCurrency(requireContext()) == CurrencyUtils.CURRENCY_USD
+            val isAppUsd = CurrencyUtils.getSelectedCurrency(context) == CurrencyUtils.CURRENCY_USD
 
             if (isReceiptUsd && !isAppUsd) {
                 // Receipt is $, App is LKR
-                detectedAmount *= CurrencyUtils.EXCHANGE_RATE_USD_TO_LKR
+                detectedAmount = detectedAmount!! * CurrencyUtils.EXCHANGE_RATE_USD_TO_LKR
             } else if (!isReceiptUsd && isAppUsd) {
                 // Receipt is LKR, App is $
-                detectedAmount /= CurrencyUtils.EXCHANGE_RATE_USD_TO_LKR
+                detectedAmount = detectedAmount!! / CurrencyUtils.EXCHANGE_RATE_USD_TO_LKR
             }
         }
 
